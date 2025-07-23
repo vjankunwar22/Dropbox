@@ -82,3 +82,65 @@ export const getAllUsers = tryCatchHandler(
     return;
   }
 );
+
+export const updateUser = tryCatchHandler(
+  async (req: Request, res: Response): Promise<void> => {
+    //@ts-ignore
+    const { name, email, password, role, profileImage } = req.body;
+    const { uuid } = req.params;
+    const data: any = { name, email, profileImage, role };
+    if (password) {
+      data.password = await bcrypt.hash(password, 10);
+    }
+    const user = await prisma.user.update({
+      where: { id: uuid },
+      data,
+    });
+    res.status(200).json({ message: "User updated successfully.", user });
+    return;
+  }
+);
+
+export const updateProfile = tryCatchHandler(
+  async (req: Request, res: Response): Promise<void> => {
+    //@ts-ignore
+    const userId = req.user.id;
+
+    const { name, email, password, profileImage } = req.body;
+    const data: any = {};
+    if (name) data.name = name;
+    if (email) data.email = email;
+    if (profileImage) data.profileImage = profileImage;
+    if (password) {
+      data.password = await bcrypt.hash(password, 10);
+    }
+
+    const user = await prisma.user.update({
+      where: { id: userId },
+      data,
+    });
+    res.status(200).json({ message: "Profile updated successfully.", user });
+    return;
+  }
+);
+
+export const getProfile = tryCatchHandler(
+  async (req: Request, res: Response) => {
+    //@ts-ignore
+    const userId = req.user.id;
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        profileImage: true,
+        role: true,
+        createdAt: true,
+      },
+    });
+    res.status(200).json(user);
+    return;
+  }
+);
