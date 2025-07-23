@@ -21,7 +21,7 @@ app.get("/", (req: Request, res: Response) => {
   res.send("Hello Vision!");
 });
 
-app.use("/api/auth", authRoutes);
+app.use("/auth", authRoutes);
 
 app.use(errorMiddleware);
 

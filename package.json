@@ -2,7 +2,7 @@
   
  "scripts": {
     "build": "tsc",
-    "start": "node dist/app.js",
+    "start": "node dist/app.ts",
     "dev": "ts-node src/app.ts",
     "prestart": "pnpm run build",
     "db:generate" : "npx prisma generate",
