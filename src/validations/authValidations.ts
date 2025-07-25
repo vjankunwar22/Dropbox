@@ -17,3 +17,14 @@ export const userProfileSchema = z.object({
   password: z.string().min(1, "Password is required").optional(),
   role: z.enum(["ADMIN", "USER"]).optional(),
 });
+export const deleteUserSchema = z.object({
+  params: z.object({
+    id: z
+      .string()
+      .regex(/^\d+$/, "Invalid user id")
+      .transform(Number)
+      .refine((val) => val > 0, {
+        message: "User id must be a positive integer",
+      }),
+  }),
+});

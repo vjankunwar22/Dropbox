@@ -1,5 +1,6 @@
 import { Router } from "express";
 import {
+  deleteUser,
   getAllUsers,
   getProfile,
   login,
@@ -9,6 +10,7 @@ import {
 } from "../controllers/authController";
 import { validateRequest } from "../middlewares/validateRequest";
 import {
+  deleteUserSchema,
   loginSchema,
   registerSchema,
   userProfileSchema,
@@ -38,6 +40,14 @@ router.put(
   isAdmin,
   updateUser,
   validateRequest(userProfileSchema)
+);
+
+router.delete(
+  "/user/:id",
+  authenticateJWT,
+  isAdmin,
+  deleteUser,
+  validateRequest(deleteUserSchema)
 );
 
 export default router;
