@@ -87,19 +87,30 @@ export const updateUser = tryCatchHandler(
   async (req: Request, res: Response): Promise<void> => {
     //@ts-ignore
     const { name, email, password, role, profileImage } = req.body;
-    const { uuid } = req.params;
+    const { id } = req.params;
     const data: any = { name, email, profileImage, role };
     if (password) {
       data.password = await bcrypt.hash(password, 10);
     }
     const user = await prisma.user.update({
-      where: { id: uuid },
+      where: { id: String(id) },
       data,
     });
     res.status(200).json({ message: "User updated successfully.", user });
     return;
   }
 );
+
+export const deleteUser = tryCatchHandler(
+  async (req: Request, res: Response): Promise<void> => {
+    const { id } = req.params;
+    await prisma.user.delete({ where: { id: String(id) } });
+    res.status(200).json({ message: "User Deleted Sucessfully." });
+    return;
+  }
+);
+
+
 
 export const updateProfile = tryCatchHandler(
   async (req: Request, res: Response): Promise<void> => {
