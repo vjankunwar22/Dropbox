@@ -3,6 +3,7 @@ import type { Request, Response } from "express";
 import errorMiddleware from "./middlewares/errorMiddleware";
 import authRoutes from "./routes/authRoutes";
 import workspaceRoutes from "./routes/workspaceRoutes";
+import fileRoutes from  "./routes/fileRoutes"
 
 import cors from "cors";
 const swaggerUi = require("swagger-ui-express");
@@ -24,6 +25,7 @@ app.get("/", (req: Request, res: Response) => {
 
 app.use("/auth", authRoutes);
 app.use("/workspace",workspaceRoutes)
+app.use("/file" , fileRoutes)
 
 app.use(errorMiddleware);
 
