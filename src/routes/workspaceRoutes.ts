@@ -17,6 +17,7 @@ import {
   WorkspaceSchema,
 } from "../validations/workspaceValidtaions";
 import { isWorkspaceAdmin } from "../middlewares/workSpaceMiddleware";
+import { getWorkspaceFiles } from "../controllers/fileController";
 
 const router = Router();
 
@@ -50,6 +51,7 @@ router.put(
   updateWorkspace,
   validateRequest(WorkspaceSchema)
 );
+router.get("/:workspaceId/files", authenticateJWT, getWorkspaceFiles);
 
 // router.delete(
 //   "/remove-user",

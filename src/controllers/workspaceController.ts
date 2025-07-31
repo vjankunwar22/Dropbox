@@ -239,55 +239,51 @@ export const updateWorkspace = tryCatchHandler(
   async (req: Request, res: Response): Promise<void> => {
     const { id } = req.params;
     const { name, slug } = req.body;
+    //@ts-ignore
+    const currentUserId = req.user.id;
 
-    const data: any = { name, slug };
+    if (!name || name.trim() === "") {
+      res.status(400).json({ message: "Workspace name is required" });
+      return;
+    }
+
+    const newSlug =
+      slug || name.toLowerCase().replace(/\s+/g, "-") + "-" + Date.now();
+
+    const existingSlug = await prisma.workspace.findUnique({
+      where: { slug: newSlug },
+    });
+
+    if (existingSlug && existingSlug.id !== id) {
+      res.status(409).json({ message: "Slug already taken" });
+      return;
+    }
 
     const workspace = await prisma.workspace.update({
       where: { id: String(id) },
-      data,
+      data: {
+        name,
+        slug: newSlug,
+        updatedBy: { connect: { id: currentUserId } },
+      },
     });
 
-    res
-      .status(200)
-      .json({ message: "Workspace is Updated sucessfully", workspace });
+    await prisma.auditLog.create({
+      data: {
+        action: "UPDATE_WORKSPACE",
+        entity: "Workspace",
+        entityId: id,
+        details: `Workspace updated to name: ${name}, slug: ${newSlug}`,
+        createdBy: { connect: { id: currentUserId } },
+        updatedBy: { connect: { id: currentUserId } },
+      },
+    });
+
+    res.status(200).json({
+      message: "Workspace updated successfully",
+      workspace,
+    });
   }
 );
 
-// export const removeUserWorkSpace = tryCatchHandler(
-//   async (req: Request, res: Response) => {
-//     const { workspaceId, userIdRemove } = req.body;
 
-//     const userRemove = await prisma.workspaceUser.findFirst({
-//       where: { workspaceId, userId: userIdRemove },
-//     });
-
-//     if (!userRemove) {
-//       res.status(404).json({ message: "User dont exist in the workspace" });
-//     }
-
-//     if (userRemove?.role === "ADMIN") {
-//       const adminCount = await prisma.workspaceUser.count({
-//         where: { workspaceId, role: "ADMIN" },
-//       });
-
-//       if (adminCount <= 1) {
-//         res
-//           .status(403)
-//           .json({ message: "Cannot remove the last admin from the workspace" });
-//         return;
-//       }
-//     }
-//     await prisma.workspaceUser.delete({
-//       where: {
-//         userId_workspaceId: {
-//           userId: userIdRemove,
-//           workspaceId,
-//         },
-//       },
-//     });
-
-//     res.status(200).json({
-//       message: "User removed from the workspace successfully",
-//     });
-//   }
-// );
