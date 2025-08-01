@@ -110,18 +110,15 @@ export const deleteUser = tryCatchHandler(
   }
 );
 
-
-
 export const updateProfile = tryCatchHandler(
   async (req: Request, res: Response): Promise<void> => {
     //@ts-ignore
     const userId = req.user.id;
 
-    const { name, email, password, profileImage } = req.body;
+    const { name, email, password } = req.body;
     const data: any = {};
     if (name) data.name = name;
     if (email) data.email = email;
-    if (profileImage) data.profileImage = profileImage;
     if (password) {
       data.password = await bcrypt.hash(password, 10);
     }
@@ -131,6 +128,46 @@ export const updateProfile = tryCatchHandler(
       data,
     });
     res.status(200).json({ message: "Profile updated successfully.", user });
+    return;
+  }
+);
+
+export const uploadProfileImage = tryCatchHandler(
+  async (req: Request, res: Response): Promise<void> => {
+    //@ts-ignore
+    const userId = req.user.id;
+
+    if (!req.file) {
+      throw new HttpError("BAD_REQUEST", "No image file uploaded");
+    }
+
+    const { putObject } = await import("../services/storage");
+    const { generateSafeFileName } = await import(
+      "../middlewares/uploadMiddleware"
+    );
+
+    // Generate safe file name
+    const safeFileName = generateSafeFileName(req.file.originalname, userId);
+    const key = `profiles/${safeFileName}`;
+
+    // Upload to S3/MinIO
+    await putObject({
+      key,
+      buffer: req.file.buffer,
+      contentType: req.file.mimetype,
+    });
+
+    // Update user profile with the image URL
+    const user = await prisma.user.update({
+      where: { id: userId },
+      data: { profileImage: key },
+    });
+
+    res.status(200).json({
+      message: "Profile image uploaded successfully.",
+      profileImage: key,
+      user,
+    });
     return;
   }
 );

@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { Router, Request, Response, NextFunction } from "express";
 import { authenticateJWT, isAdmin } from "../middlewares/authMiddleware";
 import {
   createFile,
@@ -8,14 +8,18 @@ import {
   getWorkspaceFiles,
   shareFile,
   updateFile,
+  uploadFile,
+  uploadMultipleFiles,
 } from "../controllers/fileController";
 import { validateRequest } from "../middlewares/validateRequest";
 import { fileSchema } from "../validations/fileValidations";
 import { isWorkspaceAdmin } from "../middlewares/workSpaceMiddleware";
-import multer from "multer";
+import {
+  uploadSingle,
+  uploadMultiple,
+  handleMulterError,
+} from "../middlewares/uploadMiddleware";
 import { getPresignedGetUrl, putObject } from "../services/storage";
-
-const upload = multer({ storage: multer.memoryStorage() });
 
 const router = Router();
 
@@ -37,47 +41,27 @@ router.delete("/:id", authenticateJWT, deleteFile);
 
 router.get("/allFiles", authenticateJWT, isAdmin, getAllFiles);
 
-router.get(
-  "/:fileId/content",
-  authenticateJWT,
-  isWorkspaceAdmin,
-  getFileContent
-);
+router.get("/:fileId/content", authenticateJWT, getFileContent);
 
 router.patch("/:fileId", authenticateJWT, updateFile);
 
 router.put("/:fileId/shares", authenticateJWT, shareFile);
 
+// File upload routes with proper multer integration
+router.post(
+  "/upload-single",
+  authenticateJWT,
+  uploadSingle.single("file"),
+  handleMulterError,
+  uploadFile
+);
 
-router.post("/upload", upload.single("file"), async (req, res, next) => {
-    try {
-      if (!req.file) return res.status(400).json({ error: "Missing file (use 'file')." });
-  
-      const ts = new Date().toISOString().replace(/[:.]/g, "-");
-      const safeName = req.file.originalname.replace(/\s+/g, "_");
-      const key = `${ts}-${safeName}`;
-  
-      await putObject({
-        key,
-        buffer: req.file.buffer,
-        contentType: req.file.mimetype,
-      });
-  
-      const url = await getPresignedGetUrl(key, 300); // 5 min
-      res.status(201).json({ key, url });
-    } catch (err) {
-      next(err);
-    }
-  });
-  
-  router.get("/:key", async (req, res, next) => {
-    try {
-      const url = await getPresignedGetUrl(req.params.key, 300);
-      res.json({ key: req.params.key, url });
-    } catch (err) {
-      next(err);
-    }
-  });
-
+router.post(
+  "/upload-multiple",
+  authenticateJWT,
+  uploadMultiple.array("files", 10),
+  handleMulterError,
+  uploadMultipleFiles
+);
 
 export default router;
