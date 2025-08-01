@@ -4,32 +4,31 @@ datasource db {
 }
 
 generator client {
-    provider        = "prisma-client-js"
-    
+    provider = "prisma-client-js"
 }
 
 model User {
-    id                     String          @id @default(uuid())
-    email                  String          @unique
-    name                   String?
-    password               String
-    profileImage           String?
-    role                   UserRole        @default(USER)
-    workspaces             WorkspaceUser[]
-    files                  File[]          @relation("OwnerFiles")
-    invites                Invitation[]        @relation("InvitedUser")
-    sharedFiles            FileShare[]
-    createdAt              DateTime        @default(now())
-    updatedAt              DateTime        @updatedAt
-    auditLogs              AuditLog[]
- 
+    id           String          @id @default(uuid())
+    email        String          @unique
+    name         String?
+    password     String
+    profileImage String?
+    role         UserRole        @default(USER)
+    workspaces   WorkspaceUser[]
+    files        File[]          @relation("OwnerFiles")
+    invites      Invitation[]    @relation("InvitedUser")
+    sharedFiles  FileShare[]
+    createdAt    DateTime        @default(now())
+    updatedAt    DateTime        @updatedAt
+    auditLogs    AuditLog[]
+
     // Reverse relations for createdBy/updatedBy
     workspaceCreatedBy     Workspace[]     @relation("WorkspaceCreatedBy")
     workspaceUpdatedBy     Workspace[]     @relation("WorkspaceUpdatedBy")
     workspaceUserCreatedBy WorkspaceUser[] @relation("WorkspaceUserCreatedBy")
     workspaceUserUpdatedBy WorkspaceUser[] @relation("WorkspaceUserUpdatedBy")
-    inviteCreatedBy        Invitation[]        @relation("InviteCreatedBy")
-    inviteUpdatedBy        Invitation[]        @relation("InviteUpdatedBy")
+    inviteCreatedBy        Invitation[]    @relation("InviteCreatedBy")
+    inviteUpdatedBy        Invitation[]    @relation("InviteUpdatedBy")
     fileCreatedBy          File[]          @relation("FileCreatedBy")
     fileUpdatedBy          File[]          @relation("FileUpdatedBy")
     fileShareCreatedBy     FileShare[]     @relation("FileShareCreatedBy")
@@ -55,11 +54,6 @@ model Workspace {
     createdBy   User            @relation("WorkspaceCreatedBy", fields: [createdById], references: [id])
     updatedById String
     updatedBy   User            @relation("WorkspaceUpdatedBy", fields: [updatedById], references: [id])
-
-  
-
-   
-    
 }
 
 model WorkspaceUser {
@@ -129,8 +123,6 @@ model File {
     createdBy   User         @relation("FileCreatedBy", fields: [createdById], references: [id])
     updatedById String
     updatedBy   User         @relation("FileUpdatedBy", fields: [updatedById], references: [id])
-
-    
 }
 
 model FileShare {
@@ -152,7 +144,9 @@ model FileContent {
     id          String   @id @default(uuid())
     file        File     @relation(fields: [fileId], references: [id])
     fileId      String   @unique
-    content     String
+    content     String? // now optional
+    fileType    String? // NEW
+    filePath    String? // NEW
     createdAt   DateTime @default(now())
     updatedAt   DateTime @updatedAt
     createdById String

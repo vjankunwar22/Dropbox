@@ -7,6 +7,7 @@ import {
   register,
   updateProfile,
   updateUser,
+  uploadProfileImage,
 } from "../controllers/authController";
 import { validateRequest } from "../middlewares/validateRequest";
 import {
@@ -16,6 +17,10 @@ import {
   userProfileSchema,
 } from "../validations/authValidations";
 import { authenticateJWT, isAdmin } from "../middlewares/authMiddleware";
+import {
+  uploadProfileImage as uploadProfileImageMiddleware,
+  handleMulterError,
+} from "../middlewares/uploadMiddleware";
 
 const router = Router();
 
@@ -32,6 +37,14 @@ router.put(
   authenticateJWT,
   validateRequest(userProfileSchema),
   updateProfile
+);
+
+router.post(
+  "/upload-profile-image",
+  authenticateJWT,
+  uploadProfileImageMiddleware.single("profileImage"),
+  handleMulterError,
+  uploadProfileImage
 );
 
 router.put(
